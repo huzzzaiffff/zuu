@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#08080d" />
+<meta name="description" content="A little universe made for Zinat — an interactive dark fantasy romance by Huzaif." />
+<title>The Zinat Chronicles — A Kingdom Written in Starlight</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  :root{--ink:#08080d;--ivory:#f2e8d8;--gold:#d7b77c;--rose:#9e4051;--muted:#c9bdb0;--line:rgba(224,190,135,.36);--serif:'Cormorant Garamond',Georgia,serif;--sans:'DM Sans',Arial,sans-serif}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--ink);color:var(--ivory);font-family:var(--sans);overflow:hidden}
+  button{font:inherit;color:inherit}
+  .app{position:relative;width:100%;height:100svh;min-height:540px;background:#08080d;overflow:hidden;isolation:isolate}
+  .scene{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 1s ease,visibility 1s ease;overflow:hidden;isolation:isolate}
+  .scene.active{opacity:1;visibility:visible;pointer-events:auto;z-index:2}
+  .scene::before{content:"";position:absolute;inset:-3%;z-index:-3;background-image:var(--bg);background-size:cover;background-position:center;transform:scale(1.04);animation:landscapeDrift 34s ease-in-out infinite alternate;filter:saturate(.84) contrast(1.06)}
+  .scene::after{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(90deg,rgba(4,5,10,.74) 0%,rgba(5,5,10,.43) 42%,rgba(5,5,10,.48) 100%),linear-gradient(0deg,rgba(4,5,9,.78),transparent 52%,rgba(4,5,9,.18));pointer-events:none}
+  .scene .ambient{position:absolute;inset:-10%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 72% 18%,rgba(128,83,116,.14),transparent 38%),radial-gradient(ellipse at 10% 80%,rgba(158,64,81,.12),transparent 40%);animation:ambientPulse 10s ease-in-out infinite alternate}
+  @keyframes landscapeDrift{from{transform:scale(1.04) translate3d(-.7%,0,0)}to{transform:scale(1.13) translate3d(.7%,-1%,0)}}
+  @keyframes ambientPulse{from{opacity:.55;filter:blur(0)}to{opacity:1;filter:blur(8px)}}
+  .scene[data-scene="garden"]::before{filter:saturate(1.1) hue-rotate(10deg) brightness(.69) contrast(1.12);transform:scale(1.06)}
+  .scene[data-scene="route"].route-rose::before{filter:saturate(1.15) hue-rotate(295deg) brightness(.78) contrast(1.1)}
+  .scene[data-scene="route"].route-dragon::before{filter:saturate(.78) brightness(.86) contrast(1.14)}
+  .scene[data-scene="route"].route-midnight::before{filter:saturate(.55) brightness(.66) contrast(1.2)}
+  .scene[data-scene="final"]::after{background:linear-gradient(0deg,rgba(4,5,9,.55),rgba(4,5,9,.04) 65%,rgba(4,5,9,.1))}
+  .topbar{position:absolute;top:max(18px,env(safe-area-inset-top));left:clamp(18px,4vw,54px);right:clamp(18px,4vw,54px);display:flex;align-items:center;justify-content:space-between;z-index:20;pointer-events:none}
+  .sigil{font:500 11px var(--sans);letter-spacing:.28em;text-transform:uppercase;color:rgba(244,229,207,.78)}
+  .top-controls{display:flex;gap:9px;pointer-events:auto}
+  .icon-btn{height:38px;min-width:38px;padding:0 12px;border:1px solid rgba(222,190,142,.42);border-radius:999px;background:rgba(8,8,13,.34);backdrop-filter:blur(12px);color:#e8d8bf;font-size:11px;letter-spacing:.12em;cursor:pointer;transition:.25s ease}
+  .icon-btn:hover,.icon-btn:focus-visible{background:rgba(190,144,89,.18);border-color:var(--gold);outline:none;transform:translateY(-1px)}
+  .content{position:relative;z-index:5;width:min(100% - 40px,1120px);margin:0 auto;padding:72px 0 44px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:100%;max-height:100svh;overflow-y:auto;scrollbar-width:none;}
+  .content::-webkit-scrollbar{display:none}
+  .eyebrow{font:500 10px var(--sans);letter-spacing:.38em;text-transform:uppercase;color:#d5b98e;margin:0 0 18px;display:flex;align-items:center;gap:14px}
+  .eyebrow::before{content:"";width:38px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+  h1,h2,h3,p{margin-top:0}
+  .hero-title{font:500 clamp(52px,8.8vw,118px)/.82 var(--serif);letter-spacing:-.045em;max-width:760px;margin:0 0 26px;text-shadow:0 7px 35px rgba(0,0,0,.5)}
+  .hero-title span{display:block;font-style:italic;font-weight:400;color:#e7c9a6;margin-left:clamp(20px,6vw,100px);margin-top:15px}
+  .hero-sub{max-width:460px;font:italic 21px/1.45 var(--serif);letter-spacing:.015em;color:#e1d6cb;margin-bottom:34px}
+  .hero-note{font:10px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:rgba(232,215,188,.7);margin:0 0 18px}
+  .ornament{width:210px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:20px 0 24px;position:relative}
+  .ornament::after{content:"✦";position:absolute;left:50%;top:50%;transform:translate(-50%,-55%);color:var(--gold);font-size:14px;background:transparent;padding:0 10px}
+  .btn-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .primary-btn,.secondary-btn,.text-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:51px;padding:0 24px;border-radius:3px;cursor:pointer;text-decoration:none;transition:transform .25s ease,background .25s ease,border-color .25s ease;letter-spacing:.16em;text-transform:uppercase;font-size:10px;font-weight:600}
+  .primary-btn{border:1px solid rgba(236,199,141,.8);background:linear-gradient(115deg,rgba(90,38,47,.88),rgba(28,20,27,.92));box-shadow:0 0 30px rgba(164,103,82,.14),inset 0 0 18px rgba(239,197,133,.08);color:#f4e6d2}
+  .primary-btn::after{content:"";position:absolute;inset:4px;border:1px solid rgba(237,204,157,.2);pointer-events:none}
+  .primary-btn:hover,.primary-btn:focus-visible{transform:translateY(-3px);background:linear-gradient(115deg,rgba(132,53,65,.94),rgba(54,34,42,.96));outline:none;box-shadow:0 10px 34px rgba(164,103,82,.23)}
+  .secondary-btn{border:1px solid rgba(231,211,181,.38);background:rgba(8,8,13,.25);backdrop-filter:blur(8px);color:#e4d9ca}
+  .secondary-btn:hover,.secondary-btn:focus-visible{border-color:var(--gold);background:rgba(192,153,102,.12);outline:none}
+  .text-btn{min-height:38px;padding:0 6px;border:0;background:transparent;color:#e3c49a}
+  .text-btn:hover{color:#fff;transform:translateX(3px)}
+  .microcopy{font:11px/1.5 var(--sans);color:rgba(226,215,202,.64);letter-spacing:.08em;margin:18px 0 0}
+  .panel{width:min(620px,100%);padding:clamp(22px,4vw,42px);background:linear-gradient(135deg,rgba(8,9,14,.78),rgba(13,10,14,.53));border:1px solid rgba(221,184,129,.25);box-shadow:0 25px 90px rgba(0,0,0,.35);backdrop-filter:blur(13px);position:relative}
+  .panel::before,.panel::after{content:"";position:absolute;width:30px;height:30px;border-color:rgba(221,184,129,.7);border-style:solid;pointer-events:none}
+  .panel::before{top:-1px;left:-1px;border-width:1px 0 0 1px}.panel::after{right:-1px;bottom:-1px;border-width:0 1px 1px 0}
+  .panel h2{font:500 clamp(35px,5vw,58px)/.98 var(--serif);margin:0 0 15px;color:#f1dfc7}
+  .panel p{font:18px/1.55 var(--serif);color:#d8cbbd;margin:0 0 24px;max-width:540px}
+  .panel .small-label{font:10px var(--sans);letter-spacing:.3em;text-transform:uppercase;color:#c3a477;margin-bottom:14px}
+  .right-content{align-items:flex-end;text-align:right}
+  .right-content .panel{margin-left:auto;text-align:left}
+  .right-content .eyebrow{justify-content:flex-end}
+  .center-content{align-items:center;text-align:center}
+  .center-content .eyebrow{justify-content:center}
+  .center-content .panel{text-align:center}
+  .center-content .panel p{margin-left:auto;margin-right:auto}
+  .scene-heading{font:500 clamp(46px,7vw,88px)/.9 var(--serif);max-width:800px;margin:0 0 16px;text-shadow:0 5px 30px rgba(0,0,0,.7)}
+  .scene-heading em{font-weight:400;color:#d8b48b}
+  .scene-copy{max-width:540px;font:italic 21px/1.45 var(--serif);color:#ded2c4;text-shadow:0 2px 15px rgba(0,0,0,.7)}
+  .choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;width:100%;max-width:960px;margin-top:24px}
+  .choice{min-height:200px;padding:24px 20px;position:relative;text-align:left;display:flex;flex-direction:column;justify-content:flex-end;border:1px solid rgba(223,190,139,.35);background:linear-gradient(0deg,rgba(5,6,11,.92),rgba(5,6,11,.26)),radial-gradient(circle at 80% 20%,rgba(166,94,111,.25),transparent 50%),rgba(14,12,17,.5);cursor:pointer;overflow:hidden;transition:transform .3s ease,border-color .3s ease,background .3s ease;backdrop-filter:blur(5px)}
+  .choice::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.06),transparent 65%);transform:translateX(-120%);transition:transform .75s ease}
+  .choice:hover,.choice:focus-visible{transform:translateY(-5px);border-color:#d9b77f;outline:none;background-color:rgba(80,43,52,.3)}
+  .choice:hover::before{transform:translateX(120%)}
+  .choice .number{font:10px var(--sans);letter-spacing:.25em;color:#cba879;margin-bottom:auto}
+  .choice strong{font:500 30px/.98 var(--serif);color:#f0e1cf;margin:26px 0 8px}
+  .choice span:last-child{font:11px/1.45 var(--sans);color:rgba(231,219,204,.72);letter-spacing:.04em;max-width:220px}
+  .choice .choice-glyph{position:absolute;right:20px;top:17px;font-size:25px;color:rgba(226,191,140,.78)}
+  .route-message{margin:22px 0 0;min-height:42px;font:italic 18px/1.45 var(--serif);color:#e4cba7;max-width:620px}
+  .action-line{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:25px}
+  .dragon-flight{position:absolute;top:13%;left:-35%;width:clamp(160px,25vw,320px);height:auto;z-index:4;opacity:.88;pointer-events:none;filter:drop-shadow(0 0 22px rgba(201,164,117,.25));animation:dragonTraverse 18s linear infinite}
+  .dragon-flight.fly-now{animation:dragonBurst 5.6s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes dragonTraverse{0%{transform:translateX(0) translateY(5px) scale(.74);opacity:0}8%{opacity:.82}47%{transform:translateX(165vw) translateY(-50px) scale(1.02);opacity:.86}53%{opacity:0}100%{transform:translateX(165vw) translateY(-50px) scale(1.02);opacity:0}}
+  @keyframes dragonBurst{0%{transform:translate(-10vw,80px) scale(.55);opacity:0}12%{opacity:1}70%{transform:translate(95vw,-70px) scale(1.2);opacity:1}100%{transform:translate(130vw,-120px) scale(.85);opacity:0}}
+  .wing{transform-box:fill-box;transform-origin:50% 70%;animation:wingbeat .9s ease-in-out infinite alternate}
+  .wing.right{animation-delay:-.3s}
+  @keyframes wingbeat{from{transform:rotate(-14deg) scaleY(.92)}to{transform:rotate(19deg) scaleY(1.06)}}
+  .sigil-wrap{display:flex;align-items:center;gap:14px;margin:24px 0 0}
+  .sigil-button{width:60px;height:60px;border-radius:50%;border:1px solid rgba(226,188,130,.63);background:radial-gradient(circle,rgba(164,103,82,.26),rgba(6,7,12,.85));box-shadow:0 0 0 7px rgba(203,165,117,.05),0 0 34px rgba(190,125,86,.13);display:grid;place-items:center;color:#e7c898;font:28px var(--serif);cursor:pointer;transition:.2s ease}
+  .sigil-button:hover,.sigil-button:active{transform:scale(1.08);box-shadow:0 0 0 12px rgba(203,165,117,.07),0 0 44px rgba(190,125,86,.25)}
+  .sigil-count{font:10px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:#c7b7a5}
+  .sigil-count b{color:#e8c38a;font-weight:500}
+  .stars-area{position:relative;width:min(690px,100%);height:min(40vh,330px);min-height:230px;margin:6px auto 12px}
+  .collect-star{position:absolute;width:46px;height:46px;border:1px solid rgba(237,208,163,.46);border-radius:50%;background:radial-gradient(circle,rgba(215,177,126,.32),rgba(11,10,16,.65));color:#ffe2aa;font-size:23px;cursor:pointer;display:grid;place-items:center;box-shadow:0 0 18px rgba(217,173,112,.15);animation:starPulse 2.7s ease-in-out infinite;transition:transform .3s,opacity .3s}
+  .collect-star:hover{transform:scale(1.22) rotate(12deg);box-shadow:0 0 32px rgba(234,196,136,.45)}
+  .collect-star.collected{pointer-events:none;opacity:0;transform:translateY(-90px) scale(1.8);transition:all .65s ease}
+  .collect-star:nth-child(1){left:10%;top:22%}.collect-star:nth-child(2){left:43%;top:7%;animation-delay:.4s}.collect-star:nth-child(3){right:12%;top:30%;animation-delay:.8s}.collect-star:nth-child(4){left:28%;bottom:10%;animation-delay:1.2s}.collect-star:nth-child(5){right:31%;bottom:7%;animation-delay:1.6s}
+  @keyframes starPulse{0%,100%{box-shadow:0 0 13px rgba(217,173,112,.13);filter:brightness(.92)}50%{box-shadow:0 0 27px rgba(217,173,112,.42);filter:brightness(1.22)}}
+  .collect-status{font:10px var(--sans);letter-spacing:.25em;text-transform:uppercase;color:#d4b98d;margin:0 0 15px}
+  .progress-dots{display:flex;gap:9px;justify-content:center;margin:0 0 18px}
+  .progress-dots i{width:6px;height:6px;border-radius:50%;background:rgba(224,195,154,.25);border:1px solid rgba(224,195,154,.32)}
+  .progress-dots i.done{background:#e5c18d;box-shadow:0 0 12px #d4a96c}
+  .letter{width:min(680px,100%);padding:clamp(25px,5vw,54px);background:linear-gradient(135deg,rgba(41,29,25,.94),rgba(20,17,19,.95));border:1px solid rgba(215,181,130,.48);box-shadow:0 30px 100px rgba(0,0,0,.55);position:relative;color:#eadbc3}
+  .letter::before{content:"";position:absolute;inset:10px;border:1px solid rgba(218,181,126,.2);pointer-events:none}
+  .letter-top{font:10px var(--sans);letter-spacing:.34em;text-transform:uppercase;color:#c6a878;margin-bottom:22px}
+  .letter h2{font:italic 500 clamp(36px,5vw,55px)/1 var(--serif);margin:0 0 22px;color:#f0dfc5}
+  .letter p{font:18px/1.55 var(--serif);color:#e0d1bd;margin:0 0 13px}
+  .letter .signoff{font:italic 27px var(--serif);color:#e5c18e;margin:20px 0 0}
+  .wax{position:absolute;right:28px;top:-24px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#b86a64,#63232f 65%,#32141d);border:1px solid rgba(225,177,131,.55);box-shadow:0 5px 16px rgba(0,0,0,.3);font-size:17px;color:#edc89b}
+  .garden-lanterns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+  .lantern{padding:9px 14px;border:1px solid rgba(215,181,130,.4);background:rgba(8,8,13,.5);color:#e5c99d;font:10px var(--sans);letter-spacing:.13em;text-transform:uppercase;cursor:pointer;transition:.25s}
+  .lantern:hover,.lantern.lit{background:rgba(196,143,81,.18);border-color:#dfbb82;box-shadow:0 0 20px rgba(227,181,116,.18)}
+  .footer-note{position:absolute;bottom:max(18px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font:9px var(--sans);letter-spacing:.27em;text-transform:uppercase;color:rgba(226,213,196,.56);z-index:8}
+  .hud{position:absolute;top:74px;right:clamp(18px,4vw,54px);z-index:8;font:9px var(--sans);letter-spacing:.22em;text-transform:uppercase;color:rgba(237,218,187,.75)}
+  .hud span{color:#edc994}
+  .scene-indicator{position:absolute;bottom:26px;left:clamp(18px,4vw,54px);z-index:8;display:flex;gap:6px;align-items:center;color:rgba(231,215,192,.6);font:9px var(--sans);letter-spacing:.2em;text-transform:uppercase}
+  .scene-indicator::before{content:"";display:block;width:24px;height:1px;background:var(--gold)}
+  #fx{position:absolute;inset:0;width:100%;height:100%;z-index:10;pointer-events:none}
+  .petal{position:absolute;width:10px;height:16px;z-index:3;pointer-events:none;border-radius:80% 0 80% 0;background:linear-gradient(135deg,#b95765,#552432);opacity:.58;filter:drop-shadow(0 0 4px rgba(161,68,79,.3));animation:petalFall linear infinite}
+  @keyframes petalFall{0%{transform:translate3d(0,-10vh,0) rotate(0deg);opacity:0}10%{opacity:.75}90%{opacity:.55}100%{transform:translate3d(130px,115vh,0) rotate(520deg);opacity:0}}
+  .vignette{position:absolute;inset:0;z-index:7;pointer-events:none;box-shadow:inset 0 0 150px rgba(0,0,0,.52)}
+  .toast{position:absolute;left:50%;bottom:78px;transform:translate(-50%,20px);z-index:30;padding:12px 18px;border:1px solid rgba(218,181,126,.4);background:rgba(12,10,14,.9);backdrop-filter:blur(10px);font:italic 16px var(--serif);color:#ecd3ad;opacity:0;transition:.35s;pointer-events:none;text-align:center;width:max-content;max-width:90%}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .final-title{font:500 clamp(58px,10vw,132px)/.85 var(--serif);text-align:center;letter-spacing:-.045em;text-shadow:0 0 35px rgba(225,172,133,.25),0 9px 35px rgba(0,0,0,.6);margin:0 0 22px}
+  .final-title em{display:block;color:#e4c19b;font-weight:400}
+  .final-sub{font:italic clamp(19px,2vw,25px)/1.4 var(--serif);text-align:center;color:#e6d3bc;max-width:570px;margin:0 auto 28px}
+  .final-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+  .divider-label{font:9px var(--sans);letter-spacing:.4em;text-transform:uppercase;color:#c5a47b;margin:0 0 15px}
+  .mobile-scroll{max-height:calc(100svh - 120px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(208,172,121,.3) transparent;padding:8px 4px 16px}
+  @media(max-width:760px){
+    .app{min-height:570px}.scene::before{background-position:57% center}.scene::after{background:linear-gradient(90deg,rgba(4,5,10,.68),rgba(5,5,10,.36)),linear-gradient(0deg,rgba(4,5,9,.82),transparent 60%,rgba(4,5,9,.2))}
+    .content{width:calc(100% - 34px);padding:78px 0 66px}.hero-title{font-size:clamp(53px,14vw,86px)}.hero-sub{font-size:19px;max-width:340px}.panel{padding:23px 20px}.panel p{font-size:17px}.choices{grid-template-columns:1fr;gap:9px;margin-top:14px}.choice{min-height:115px;padding:16px 18px}.choice strong{font-size:26px;margin:20px 0 5px}.choice .number{position:absolute;top:18px;left:18px}.choice .choice-glyph{right:18px;top:34px}.scene-heading{font-size:clamp(43px,12vw,67px)}.scene-copy{font-size:18px}.right-content{align-items:flex-start;text-align:left}.right-content .eyebrow{justify-content:flex-start}.right-content .panel{margin:0}.stars-area{height:245px;min-height:220px}.collect-star{width:42px;height:42px}.letter p{font-size:16px}.letter{max-height:calc(100svh - 130px);overflow-y:auto}.topbar{top:max(12px,env(safe-area-inset-top));left:17px;right:17px}.sigil{font-size:9px;letter-spacing:.2em}.icon-btn{height:34px;min-width:34px;padding:0 9px}.hud{top:58px}.footer-note{font-size:8px}.dragon-flight{top:10%;width:210px}
+  }
+  @media(max-height:700px) and (min-width:761px){.content{padding-top:65px;padding-bottom:35px}.hero-title{font-size:clamp(52px,7vw,86px)}.choice{min-height:160px}.stars-area{height:245px}.panel{padding:22px 30px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="vignette"></div>
+  <div class="topbar">
+    <div class="sigil">A tale in seven quiet wonders</div>
+    <div class="top-controls">
+      <button class="icon-btn" id="soundToggle" aria-label="Toggle sound effects" title="Sound effects">SOUND OFF</button>
+      <button class="icon-btn" id="restartTop" aria-label="Restart story" title="Restart">↺</button>
+    </div>
+  </div>
+
+  <section class="scene active" data-scene="intro" style="--bg:url('assets/castle-balcony.webp')" aria-label="Opening scene">
+    <div class="ambient"></div>
+    <div class="content">
+      <p class="eyebrow">A private little universe</p>
+      <h1 class="hero-title">A kingdom <span>written in starlight.</span></h1>
+      <p class="hero-sub">Somewhere beyond the noise of the world, a story has been keeping a place for you.</p>
+      <p class="hero-note">For Zinat · from Huzaif</p>
+      <div class="ornament"></div>
+      <div class="btn-row">
+        <button class="primary-btn" id="enterStory">Enter your story <span>✦</span></button>
+        <span class="microcopy">Best experienced with the sound on · optional</span>
+      </div>
+    </div>
+    <div class="footer-note">Turn the page · follow the light</div>
+  </section>
+
+  <section class="scene" data-scene="omen" style="--bg:url('assets/castle-balcony.webp')">
+    <div class="ambient"></div>
+    <svg class="dragon-flight" id="dragonFlight" viewBox="0 0 520 230" aria-hidden="true">
+      <defs><linearGradient id="dragonShade" x1="0" x2="1"><stop stop-color="#090a10"/><stop offset=".55" stop-color="#17131a"/><stop offset="1" stop-color="#3b2930"/></linearGradient></defs>
+      <g fill="url(#dragonShade)" stroke="#8c6b5c" stroke-opacity=".34" stroke-width="2">
+        <path d="M44 122 C103 96 138 90 195 103 C225 82 250 70 284 75 C306 78 319 92 330 104 C372 95 420 96 462 119 C430 123 405 132 380 145 C341 138 310 134 278 139 C235 157 191 155 151 141 C108 151 76 143 44 122Z"/>
+        <path d="M220 91 C188 49 153 15 106 8 C127 51 142 84 163 117 C182 120 203 111 220 91Z" class="wing left"/>
+        <path d="M285 91 C318 42 367 18 420 26 C390 61 361 91 330 121 C313 119 295 107 285 91Z" class="wing right"/>
+        <path d="M450 117 L498 92 L475 131 L505 153 L453 140 L421 153 L434 125Z"/>
+        <path d="M81 124 C34 118 18 95 5 79 C10 115 35 153 89 149Z"/>
+        <path d="M237 143 L217 193 L248 173 L265 207 L275 144Z"/>
+        <path d="M325 137 L351 184 L356 148 L389 165 L366 129Z"/>
+        <path d="M306 96 L319 75 L330 98 L348 104 L326 112Z"/>
+      </g>
+      <circle cx="329" cy="107" r="3" fill="#d9a76f"/>
+    </svg>
+    <div class="content">
+      <p class="eyebrow">Chapter I · The old guardian</p>
+      <h2 class="scene-heading">Something ancient<br/><em>has awakened.</em></h2>
+      <p class="scene-copy">The castle bells have been silent for a hundred years. Tonight, the mountain answers them. A shadow circles the moon — and the old guardian is waiting for a name.</p>
+      <div class="sigil-wrap">
+        <button class="sigil-button" id="wakeDragon" aria-label="Touch the ancient sigil">✧</button>
+        <div><div class="sigil-count">Touch the sigil <b id="sigilCount">0 / 3</b></div><p class="microcopy" id="dragonStatus">The stone is cold beneath your hand.</p></div>
+      </div>
+      <div class="action-line"><button class="primary-btn" id="followDragon" disabled style="opacity:.45;cursor:not-allowed">Follow the guardian →</button></div>
+    </div>
+    <div class="scene-indicator">The first omen</div>
+  </section>
+
+  <section class="scene" data-scene="paths" style="--bg:url('assets/castle-balcony.webp')">
+    <div class="ambient"></div>
+    <div class="content">
+      <p class="eyebrow">Chapter II · Three roads</p>
+      <h2 class="scene-heading">Every legend<br/><em>begins with a choice.</em></h2>
+      <p class="scene-copy">The guardian lowers its wings. Three paths appear beneath the castle — each carrying a different kind of magic.</p>
+      <div class="choices">
+        <button class="choice" data-route="rose"><span class="number">01 / THE ROSE GATE</span><span class="choice-glyph">❧</span><strong>Where roses remember</strong><span>A hidden garden, a locked library and a secret kept in velvet.</span></button>
+        <button class="choice" data-route="dragon"><span class="number">02 / THE HIGH KINGDOM</span><span class="choice-glyph">♜</span><strong>Above the clouds</strong><span>A flight over the mountains, beyond maps and ordinary skies.</span></button>
+        <button class="choice" data-route="midnight"><span class="number">03 / THE MIDNIGHT ROAD</span><span class="choice-glyph">✦</span><strong>Where the wild wind goes</strong><span>A midnight ride, silver moonlight and a kingdom without fences.</span></button>
+      </div>
+      <p class="route-message" id="routeMessage" aria-live="polite">Choose the path that calls to you. They all lead to the same sky.</p>
+    </div>
+    <div class="scene-indicator">Choose your own legend</div>
+  </section>
+
+  <section class="scene" data-scene="route" style="--bg:url('assets/castle-balcony.webp')">
+    <div class="ambient"></div>
+    <div class="content right-content">
+      <div class="panel">
+        <div class="small-label" id="routeLabel">A path has opened</div>
+        <h2 id="routeTitle">The rose gate</h2>
+        <p id="routeText">The path is yours to discover.</p>
+        <p id="routeSecond" style="font-style:italic;color:#d2b38a">There are places that only appear when you decide to look for them.</p>
+        <div class="action-line"><button class="primary-btn" id="routeContinue">Continue the journey →</button><button class="text-btn" id="backToPaths">Choose another path</button></div>
+      </div>
+    </div>
+    <div class="scene-indicator">A chapter of your choosing</div>
+  </section>
+
+  <section class="scene" data-scene="balcony" style="--bg:url('assets/knight-princess.webp')">
+    <div class="ambient"></div>
+    <div class="content right-content">
+      <p class="eyebrow">Chapter III · The balcony above the world</p>
+      <div class="panel">
+        <div class="small-label">Two names, one impossible kingdom</div>
+        <h2>Huzaif <em style="color:#d5b28b;font-style:italic">&</em> Zinat</h2>
+        <p>Among a thousand kingdoms, countless stars and a million unfinished stories… somehow, the universe wrote our names into the same chapter.</p>
+        <p style="font-style:italic;color:#d3b28b">Not a tale of someone waiting to be rescued. A tale of two souls choosing their own adventures.</p>
+        <div class="action-line"><button class="primary-btn" id="toGarden">See what the stars kept →</button></div>
+      </div>
+    </div>
+    <div class="scene-indicator">The chapter with our names</div>
+  </section>
+
+  <section class="scene" data-scene="garden" style="--bg:url('assets/castle-balcony.webp')">
+    <div class="ambient"></div>
+    <div class="content center-content">
+      <p class="eyebrow">Chapter IV · The stardust garden</p>
+      <h2 class="scene-heading">A little magic<br/><em>for the extraordinary.</em></h2>
+      <p class="scene-copy">Five stars fell into the garden. Find them, and the old chest will remember how to open. Somewhere above, violet lights shimmer like a distant concert in another universe.</p>
+      <div class="collect-status"><span id="starCounter">0</span> / 5 stars found</div>
+      <div class="progress-dots" id="progressDots"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="stars-area" id="starsArea" aria-label="Find five glowing stars">
+        <button class="collect-star" aria-label="Collect star one">✧</button>
+        <button class="collect-star" aria-label="Collect star two">✧</button>
+        <button class="collect-star" aria-label="Collect star three">✧</button>
+        <button class="collect-star" aria-label="Collect star four">✧</button>
+        <button class="collect-star" aria-label="Collect star five">✧</button>
+      </div>
+      <div class="garden-lanterns"><button class="lantern" data-lantern="1">Light a lantern</button><button class="lantern" data-lantern="2">Release a wish</button><button class="lantern" data-lantern="3">Wake the garden</button></div>
+      <button class="primary-btn" id="openLetter" disabled style="opacity:.45;cursor:not-allowed">Open the secret letter <span>✦</span></button>
+    </div>
+    <div class="hud">A sky full of <span>small wonders</span></div>
+    <div class="scene-indicator">Collect a little starlight</div>
+  </section>
+
+  <section class="scene" data-scene="letter" style="--bg:url('assets/knight-princess.webp')">
+    <div class="ambient"></div>
+    <div class="content center-content">
+      <div class="letter">
+        <div class="wax">H ✦ Z</div>
+        <div class="letter-top">A letter from the other side of the stars</div>
+        <h2>Dear Zinat,</h2>
+        <p>I don't know what kind of day you've had, or what has been going through that wonderfully unpredictable mind of yours.</p>
+        <p>But I wanted to build you a little world where there are castles to explore, dragons to follow, stars to collect and adventures waiting around every corner.</p>
+        <p>In this story, you're not waiting for someone to save you. You're the girl the legends are written about.</p>
+        <p>And somewhere in your kingdom, there's a certain knight named Huzaif who would happily get lost in a thousand adventures with you.</p>
+        <p>I hope this makes you smile, even if just a little. No expectations, no pressure. Just a little magic from me to you.</p>
+        <div class="signoff">— Huzaif ♡</div>
+      </div>
+      <div class="action-line" style="justify-content:center"><button class="primary-btn" id="toFinal">Turn the last page →</button></div>
+    </div>
+    <div class="scene-indicator">A note, just for you</div>
+  </section>
+
+  <section class="scene" data-scene="final" style="--bg:url('assets/knight-princess.webp')">
+    <div class="ambient"></div>
+    <div class="content center-content">
+      <p class="eyebrow">The final page · and all the pages after</p>
+      <h2 class="final-title">Every universe<br/><em>needs a little magic.</em></h2>
+      <p class="final-sub">And this one has you, Zinat.</p>
+      <div class="ornament"></div>
+      <div class="final-actions"><button class="primary-btn" id="releaseStars">Release a thousand stars ✦</button><button class="secondary-btn" id="experienceAgain">Experience it again ↺</button></div>
+      <p class="microcopy" style="text-align:center;margin-top:25px">Made with a little magic, a lot of imagination, and love.<br/>— Huzaif</p>
+    </div>
+    <div class="scene-indicator">To be continued, whenever you like</div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+<script>
+(() => {
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+  const scenes = $$('.scene');
+  const toast = $('#toast');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let sigilTaps = 0, starsFound = 0, soundOn = false, audioCtx = null, toastTimer;
+  let currentRoute = 'rose';
+
+  function showToast(message){
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>toast.classList.remove('show'),2200);
+  }
+  function playChime(kind='soft'){
+    if(!soundOn) return;
+    try{
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if(audioCtx.state==='suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const notes = kind==='spark' ? [659.25, 987.77, 1318.51] : kind==='fire' ? [392,587.33,783.99,1174.66] : [523.25,659.25,783.99];
+      notes.forEach((freq,i)=>{
+        const osc=audioCtx.createOscillator(), gain=audioCtx.createGain();
+        osc.type='sine'; osc.frequency.value=freq;
+        gain.gain.setValueAtTime(0,now+i*.055);
+        gain.gain.linearRampToValueAtTime(.045,now+i*.055+.025);
+        gain.gain.exponentialRampToValueAtTime(.0001,now+i*.055+.7);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now+i*.055); osc.stop(now+i*.055+.72);
+      });
+    }catch(e){ /* audio is an optional enhancement */ }
+  }
+  function go(name){
+    const next = scenes.find(s=>s.dataset.scene===name);
+    if(!next) return;
+    const old = $('.scene.active');
+    if(old===next) return;
+    old?.classList.remove('active');
+    next.classList.add('active');
+    playChime('soft');
+    if(name==='final') launchFireworks(90);
+  }
+  function restart(){
+    sigilTaps=0; starsFound=0;
+    $('#sigilCount').textContent='0 / 3';
+    $('#dragonStatus').textContent='The stone is cold beneath your hand.';
+    $('#followDragon').disabled=true; $('#followDragon').style.opacity='.45'; $('#followDragon').style.cursor='not-allowed';
+    $('#starCounter').textContent='0';
+    $$('.progress-dots i').forEach(i=>i.classList.remove('done'));
+    $$('.collect-star').forEach(s=>s.classList.remove('collected'));
+    $('#openLetter').disabled=true; $('#openLetter').style.opacity='.45'; $('#openLetter').style.cursor='not-allowed';
+    $$('.lantern').forEach(l=>l.classList.remove('lit'));
+    go('intro');
+  }
+  $('#enterStory').addEventListener('click',()=>{go('omen'); dragonFly(true); burst(window.innerWidth*.72,window.innerHeight*.32,24,'ember');});
+  $('#restartTop').addEventListener('click',restart);
+  $('#experienceAgain').addEventListener('click',restart);
+  $('#soundToggle').addEventListener('click',()=>{
+    soundOn=!soundOn;
+    $('#soundToggle').textContent=soundOn?'SOUND ON':'SOUND OFF';
+    if(soundOn) playChime('spark');
+  });
+
+  function dragonFly(burst=false){
+    const dragon=$('#dragonFlight');
+    dragon.classList.remove('fly-now');
+    void dragon.offsetWidth;
+    if(burst) dragon.classList.add('fly-now');
+  }
+  $('#wakeDragon').addEventListener('click',()=>{
+    sigilTaps=Math.min(3,sigilTaps+1);
+    $('#sigilCount').textContent=`${sigilTaps} / 3`;
+    const messages=['A thin line of light wakes beneath the stone.','A low, distant rumble rolls through the mountain.','The guardian knows your name. The old kingdom stirs.'];
+    $('#dragonStatus').textContent=messages[sigilTaps-1];
+    burst(window.innerWidth*.23,window.innerHeight*.5,18,'gold');
+    playChime('spark');
+    if(sigilTaps===3){
+      $('#followDragon').disabled=false;$('#followDragon').style.opacity='1';$('#followDragon').style.cursor='pointer';
+      dragonFly(true);showToast('The old guardian has chosen to fly with you.');
+    }
+  });
+  $('#followDragon').addEventListener('click',()=>go('paths'));
+
+  const routeDetails={
+    rose:{label:'Path I · The rose gate',title:'Where roses remember',text:'The iron gate gives way without a sound. Beyond it, a garden sleeps beneath red vines and silver rain. Every rose carries a memory; one of them is yours to keep.',second:'A velvet-bound book lies open on a marble bench. Its final page is blank — waiting for a story only you can write.',bg:'rose'},
+    dragon:{label:'Path II · The high kingdom',title:'Above the clouds',text:'The guardian folds one enormous wing around you. The world falls away: dark forests, snow-lit ridges, rivers like threads of silver. For a moment, the sky feels like a place you have always known.',second:'Far below, the castle lights look like constellations that decided to live on earth.',bg:'dragon'},
+    midnight:{label:'Path III · The midnight road',title:'Where the wild wind goes',text:'A black motorcycle waits beside an old stone bridge, its chrome catching the moonlight. Beyond it, a road winds between ancient pines and distant castle lights. No map. No rules. Just the night, the open road and a rider who knows when to chase the horizon.',second:'Some journeys are not about finding a destination. They are about feeling wonderfully, completely alive.',bg:'midnight'}
+  };
+  $$('[data-route]').forEach(btn=>btn.addEventListener('click',()=>{
+    currentRoute=btn.dataset.route;const d=routeDetails[currentRoute];
+    $('#routeLabel').textContent=d.label;$('#routeTitle').textContent=d.title;$('#routeText').textContent=d.text;$('#routeSecond').textContent=d.second;
+    $('#routeMessage').textContent=`${d.title} — a path worth remembering.`;
+    const routeScene=$('[data-scene="route"]');
+    routeScene.classList.remove('route-rose','route-dragon','route-midnight');
+    routeScene.classList.add(`route-${currentRoute}`);
+    routeScene.style.setProperty('--bg', currentRoute==='midnight' ? "url('assets/knight-princess.webp')" : "url('assets/castle-balcony.webp')");
+    go('route');burst(window.innerWidth*.55,window.innerHeight*.45,22,'petal');playChime('spark');
+  }));
+  $('#backToPaths').addEventListener('click',()=>go('paths'));
+  $('#routeContinue').addEventListener('click',()=>go('balcony'));
+  $('#toGarden').addEventListener('click',()=>go('garden'));
+
+  $$('.collect-star').forEach((star,index)=>star.addEventListener('click',()=>{
+    if(star.classList.contains('collected')) return;
+    star.classList.add('collected');starsFound++;
+    $('#starCounter').textContent=starsFound;
+    $$('.progress-dots i')[index].classList.add('done');
+    const r=star.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,26,'gold');playChime('spark');
+    if(starsFound===5){$('#openLetter').disabled=false;$('#openLetter').style.opacity='1';$('#openLetter').style.cursor='pointer';showToast('The chest remembers. Something has been waiting for you.');}
+  }));
+  $$('.lantern').forEach((lantern,index)=>lantern.addEventListener('click',()=>{
+    lantern.classList.toggle('lit');
+    const r=lantern.getBoundingClientRect();burst(r.left+r.width/2,r.top,20,index===1?'star':'gold');playChime('soft');
+    const lines=['A warm light rises into the dark.','A quiet wish drifts above the rooftops.','The garden answers with a thousand tiny lights.'];
+    showToast(lines[index]);
+  }));
+  $('#openLetter').addEventListener('click',()=>go('letter'));
+  $('#toFinal').addEventListener('click',()=>{go('final');launchFireworks(130);});
+  $('#releaseStars').addEventListener('click',()=>{launchFireworks(240);playChime('fire');showToast('A thousand little lights, just for you.');});
+
+  // A restrained atmospheric particle field: embers, petals and starlight.
+  const canvas=$('#fx'),ctx=canvas.getContext('2d');
+  let W=0,H=0,particles=[],fireworks=[];
+  function resize(){const dpr=Math.min(window.devicePixelRatio||1,1.7);W=window.innerWidth;H=window.innerHeight;canvas.width=Math.floor(W*dpr);canvas.height=Math.floor(H*dpr);canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);}
+  window.addEventListener('resize',resize,{passive:true});resize();
+  function makeParticle(x=Math.random()*W,y=Math.random()*H,type='dust'){
+    const petal=type==='petal';return {x,y,vx:(Math.random()-.5)*(petal?0.65:.28),vy:Math.random()*(petal?1.15:.42)+.12,size:Math.random()*(petal?5:2.1)+.5,life:Math.random()*220+160,age:0,rot:Math.random()*6.28,spin:(Math.random()-.5)*.025,type,alpha:Math.random()*.42+.12};
+  }
+  for(let i=0;i<70;i++)particles.push(makeParticle(Math.random()*W,Math.random()*H,Math.random()>.76?'petal':'dust'));
+  function burst(x,y,count=24,type='gold'){
+    for(let i=0;i<count;i++){
+      const a=Math.random()*Math.PI*2,s=Math.random()*3+0.6;
+      particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-0.7,size:Math.random()*3+1,life:Math.random()*45+35,age:0,rot:Math.random()*6.28,spin:(Math.random()-.5)*.1,type,alpha:.9});
+    }
+  }
+  function launchFireworks(count=80){
+    for(let i=0;i<count;i++){
+      const x=Math.random()*W,y=Math.random()*H*.66,angle=Math.random()*Math.PI*2,speed=Math.random()*3.6+1;
+      fireworks.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,size:Math.random()*2.4+1,life:Math.random()*90+50,age:0,hue:[8,22,330,275,42][Math.floor(Math.random()*5)],gravity:.018});
+    }
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    if(!reducedMotion){
+      if(Math.random()<.11)particles.push(makeParticle(Math.random()*W,-10,Math.random()>.55?'petal':'dust'));
+      particles=particles.filter(p=>p.age<p.life);
+      for(const p of particles){p.age++;p.x+=p.vx+Math.sin(p.age*.022)*.16;p.y+=p.vy;p.rot+=p.spin;p.vx*=.994;p.vy*=.999;const fade=Math.min(1,p.age/18,(p.life-p.age)/35);ctx.save();ctx.globalAlpha=Math.max(0,p.alpha*fade);
+        if(p.type==='petal') {ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle='#9b4352';ctx.beginPath();ctx.ellipse(0,0,p.size*.65,p.size,0,0,Math.PI*2);ctx.fill();}
+        else {ctx.fillStyle=p.type==='ember'?'#e4a36d':p.type==='star'?'#fff0c8':'#d9c4a3';ctx.shadowBlur=p.type==='gold'||p.type==='star'?12:4;ctx.shadowColor=ctx.fillStyle;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();}
+        ctx.restore();
+      }
+    }
+    fireworks=fireworks.filter(p=>p.age<p.life);
+    for(const p of fireworks){p.age++;p.x+=p.vx;p.y+=p.vy;p.vy+=p.gravity;p.vx*=.987;const fade=Math.min(1,(p.life-p.age)/28);ctx.save();ctx.globalAlpha=Math.max(0,fade*.88);ctx.fillStyle=`hsl(${p.hue} 72% 78%)`;ctx.shadowBlur=15;ctx.shadowColor=ctx.fillStyle;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();ctx.restore();}
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  // Scattered rose petals create depth without blocking the controls.
+  if(!reducedMotion){for(let i=0;i<13;i++){const p=document.createElement('i');p.className='petal';p.style.left=(Math.random()*100)+'%';p.style.animationDelay=(-Math.random()*22)+'s';p.style.animationDuration=(17+Math.random()*18)+'s';p.style.transform=`scale(${.55+Math.random()*.9})`;$('.app').appendChild(p);}}
+})();
+</script>
+</body>
+</html>
